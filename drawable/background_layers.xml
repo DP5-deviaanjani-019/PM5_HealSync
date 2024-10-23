@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Layer luar (warna coklat gelap) -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#4F2C0A" /> <!-- Warna coklat gelap -->
+        </shape>
+    </item>
+
+    <!-- Layer dalam (warna coklat muda dengan sudut melengkung) -->
+    <item
+        android:left="16dp"
+        android:right="16dp"
+        android:top="16dp"
+        android:bottom="16dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#D9A06B" /> <!-- Warna coklat muda -->
+            <corners android:radius="16dp" /> <!-- Sudut melengkung -->
+        </shape>
+    </item>
+
+</layer-list>
