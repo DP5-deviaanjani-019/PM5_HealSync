@@ -1,0 +1,114 @@
+package com.example.cakemate
+
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import java.io.File
+import java.io.FileOutputStream
+
+class AddUploadActivity : AppCompatActivity() {
+
+    private lateinit var imageUri: Uri
+    private lateinit var imagePreview: ImageView
+    private var isEditing: Boolean = false
+    private var uploadIndex: Int = -1
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_add_upload)
+
+        val titleInput: EditText = findViewById(R.id.Judulz)
+        val imageButton: Button = findViewById(R.id.gambar)
+        val descriptionInput: EditText = findViewById(R.id.catatan)
+        val addButton: Button = findViewById(R.id.btnChangePassword)
+        imagePreview = findViewById(R.id.imagePreview)
+        val backButton: ImageView = findViewById(R.id.back_button)
+
+        isEditing = intent.getBooleanExtra("isEditing", false)
+        if (isEditing) {
+            val title = intent.getStringExtra("title") ?: ""
+            val description = intent.getStringExtra("description") ?: ""
+            val imageUriString = intent.getStringExtra("imageUri") ?: ""
+
+            titleInput.setText(title)
+            descriptionInput.setText(description)
+
+            if (imageUriString.isNotEmpty()) {
+                try {
+                    imageUri = Uri.parse(imageUriString)
+                    imagePreview.setImageURI(imageUri)
+                } catch (e: SecurityException) {
+                    Toast.makeText(this, "Image is no longer accessible.", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            uploadIndex = intent.getIntExtra("index", -1)
+            addButton.text = "Update Upload"
+        }
+
+        imageButton.setOnClickListener {
+            val intent = Intent(Intent.ACTION_PICK).apply {
+                type = "image/*"
+            }
+            startActivityForResult(intent, REQUEST_IMAGE_PICK)
+        }
+
+        addButton.setOnClickListener {
+            val title = titleInput.text.toString()
+            val description = descriptionInput.text.toString()
+
+            if (title.isBlank() || description.isBlank()) {
+                Toast.makeText(this, "Judul dan Deskripsi wajib diisi!", Toast.LENGTH_SHORT).show()
+            } else if (!::imageUri.isInitialized && !isEditing) {
+                Toast.makeText(this, "Silakan pilih gambar!", Toast.LENGTH_SHORT).show()
+            } else {
+                val resultIntent = Intent(this, MainActivityDashboard::class.java).apply {
+                    putExtra("title", title)
+                    putExtra("imageUri", imageUri.toString())
+                    putExtra("description", description)
+                }
+                startActivity(resultIntent) // Navigasi ke MainActivityDashboard
+                finish() // Tutup aktivitas saat ini
+            }
+        }
+
+        backButton.setOnClickListener {
+            finish()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_IMAGE_PICK && resultCode == Activity.RESULT_OK && data != null) {
+            val selectedImageUri = data.data
+            if (selectedImageUri != null) {
+                imageUri = saveImageToLocal(selectedImageUri)
+                imagePreview.setImageURI(imageUri)
+            }
+        }
+    }
+
+    private fun saveImageToLocal(uri: Uri): Uri {
+        val inputStream = contentResolver.openInputStream(uri)
+        val file = File(filesDir, "image_${System.currentTimeMillis()}.jpg")
+        val outputStream = FileOutputStream(file)
+
+        inputStream.use { input ->
+            outputStream.use { output ->
+                input?.copyTo(output)
+            }
+        }
+        return Uri.fromFile(file)
+    }
+
+    companion object {
+        private const val REQUEST_IMAGE_PICK = 1
+        private const val REQUEST_ADD_UPLOAD = 100
+    }
+}
