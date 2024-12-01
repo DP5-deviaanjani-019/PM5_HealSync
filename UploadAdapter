@@ -1,0 +1,59 @@
+package com.example.cakemate
+
+import android.net.Uri
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+
+class UploadAdapter : RecyclerView.Adapter<UploadAdapter.UploadViewHolder>() {
+
+    private var uploads: List<Upload> = emptyList()
+    private var onItemClickListener: ((Upload, Int) -> Unit)? = null
+
+    fun setOnItemClickListener(listener: (Upload, Int) -> Unit) {
+        onItemClickListener = listener
+    }
+
+    fun submitList(newUploads: List<Upload>) {
+        uploads = newUploads
+        notifyDataSetChanged()
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UploadViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_upload, parent, false)
+        return UploadViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: UploadViewHolder, position: Int) {
+        val upload = uploads[position]
+        holder.title.text = upload.title
+        holder.description.text = upload.description
+        try {
+            val imageUri = Uri.parse(upload.imageUri)
+            holder.image.setImageURI(imageUri) // Load upload image
+        } catch (e: Exception) {
+            holder.image.setImageResource(R.drawable.ic_placeholder_image) // Fallback image
+        }
+
+        // Handle click events
+        holder.itemView.setOnClickListener {
+            onItemClickListener?.invoke(upload, position)
+        }
+    }
+
+    fun addUpload(upload: Upload) {
+        uploads = uploads + upload
+        notifyItemInserted(uploads.size - 1)
+    }
+
+    override fun getItemCount(): Int = uploads.size
+
+    class UploadViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val title: TextView = view.findViewById(R.id.title)
+        val description: TextView = view.findViewById(R.id.description)
+        val image: ImageView = view.findViewById(R.id.img_add)
+    }
+}
