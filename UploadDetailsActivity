@@ -1,0 +1,90 @@
+package com.example.cakemate
+
+import android.annotation.SuppressLint
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+
+class UploadDetailsActivity : AppCompatActivity() {
+
+    @SuppressLint("MissingInflatedId")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_upload_details)
+
+        val upload = intent.getSerializableExtra("upload") as Upload
+        val index = intent.getIntExtra("index", -1)
+
+        val titleView: TextView = findViewById(R.id.title)
+        val descriptionView: TextView = findViewById(R.id.description)
+        val imageView: ImageView = findViewById(R.id.img_add)
+
+        titleView.text = upload.title
+        descriptionView.text = upload.description
+
+        try {
+            val imageUri = Uri.parse(upload.imageUri)
+            imageView.setImageURI(imageUri)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Gambar tidak dapat ditampilkan", Toast.LENGTH_SHORT).show()
+            imageView.setImageResource(R.drawable.ic_placeholder_image) // Gambar fallback
+        }
+
+        // Tombol Kembali
+        findViewById<Button>(R.id.btn_back).setOnClickListener {
+            finish()
+        }
+
+        // Tombol Edit
+        findViewById<Button>(R.id.btn_edit).setOnClickListener {
+            val intent = Intent(this, AddUploadActivity::class.java).apply {
+                putExtra("title", upload.title)
+                putExtra("description", upload.description)
+                putExtra("imageUri", upload.imageUri)
+                putExtra("index", index)
+                putExtra("isEditing", true) // Menandai mode edit
+            }
+            startActivityForResult(intent, REQUEST_EDIT_UPLOAD)
+        }
+
+        // Tombol Hapus
+        findViewById<Button>(R.id.btn_delete).setOnClickListener {
+            val resultIntent = Intent().apply { putExtra("index", index) }
+            setResult(RESULT_DELETE_UPLOAD, resultIntent)
+            finish()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_EDIT_UPLOAD && resultCode == RESULT_OK && data != null) {
+            val editedUpload = Upload(
+                data.getStringExtra("title") ?: "",
+                data.getStringExtra("imageUri") ?: "",
+                data.getStringExtra("description") ?: ""
+            )
+            val index = data.getIntExtra("index", -1)
+
+            if (index != -1) {
+                val resultIntent = Intent().apply {
+                    putExtra("upload", editedUpload)
+                    putExtra("index", index)
+                }
+                setResult(RESULT_UPDATE_UPLOAD, resultIntent)
+                finish()
+            }
+        }
+    }
+
+    companion object {
+        const val REQUEST_EDIT_UPLOAD = 2
+        const val RESULT_UPDATE_UPLOAD = 1001
+        const val RESULT_DELETE_UPLOAD = 1002
+    }
+}
