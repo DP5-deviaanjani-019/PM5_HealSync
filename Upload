@@ -1,0 +1,8 @@
+package com.example.cakemate
+import java.io.Serializable
+
+data class Upload(
+    val title: String,
+    val imageUri: String,
+    val description: String
+) : Serializable
